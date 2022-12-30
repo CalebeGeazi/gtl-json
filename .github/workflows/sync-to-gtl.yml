@@ -1,0 +1,32 @@
+name: Send submodule updates to parent repos
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: CalebeGeazi/guess-the-lines
+          token: ${{ secrets.SYNC_TO_PARENTS_SECRET }}
+
+      - name: Pull & update submodule on GH_PAGES repo
+        run: |
+          git submodule update --init --recursive
+          git submodule update --recursive --remote
+
+      - name: Commit
+        run: |
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions - update submodules"
+          git add --all
+          git commit -m "Update gtl-json submodule" || echo "No changes to commit"
+          git push
